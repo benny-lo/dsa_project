@@ -18,6 +18,7 @@ set(SOURCES
     src/rax.c
     src/utils.c
     src/constants.c
+    src/memory_pool.c
 )
 
 # Add header files
@@ -25,6 +26,7 @@ set(HEADERS
     src/rax.h
     src/utils.h
     src/constants.h
+    src/memory_pool.h
 )
 
 # Create main executable

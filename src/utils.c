@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 
 #include "utils.h"
 
@@ -156,10 +156,8 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
     int piece_idx, ans = 0;
 
     rax_t * tmp;  
-    int size = 0; 
-    for(int i = 0; root->piece[i] != '\0'; i++) {
-        size++; 
-    } 
+    size_t piece_size = strlen(root->piece); 
+    
     for(piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
         
         str_occur[char_index(root->piece[piece_idx])]++; 

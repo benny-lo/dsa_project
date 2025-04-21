@@ -1,6 +1,7 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <stdbool.h>
+#include <string.h> 
 
 #include "rax.h"
 #include "utils.h"
@@ -72,10 +73,7 @@ void rax_insert(rax_t * root, const char* my_str, size_t curr_idx, size_t str_si
         root->filter = 0; 
     }
 
-    size_t piece_size = 0; 
-    for(piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
-        piece_size++; 
-    }
+    size_t piece_size = strlen(root->piece); 
 
     for(piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
         if (root->piece[piece_idx] != my_str[curr_idx + piece_idx]) {
