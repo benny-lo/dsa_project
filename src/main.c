@@ -27,7 +27,7 @@ int main(int argc, char * argv[]) {
     if (scanf("%s", input) != 1) fprintf(stderr, "error taking input while building dict\n"); 
     while(input[0] != '+') {
         // insert the word into the dictionary and increment the dictionary size
-        rax_insert(NULL, dict, NULL, input, 0, k, game);
+        rax_insert(dict, input, 0, k, game);
         dict_size++;   
 
         if (scanf("%s", input) != 1) fprintf(stderr, "error taking input while building dict\n"); 
@@ -62,11 +62,11 @@ int main(int argc, char * argv[]) {
             while(strncmp(input, INSERT_END, strlen(INSERT_END) + 1) != 0) {
                 if (compatible(input, info, k)) {
                     // if the input is compatible with the constraints, it will be part of the filtered dictionary
-                    rax_insert(NULL, dict, NULL, input, 0, k, 0);
+                    rax_insert(dict, input, 0, k, 0);
                     filtered_size++;  
                 } else {
                     // if the input is not compatible with the constraints, it will not be part of the filtered dictionary
-                    rax_insert(NULL, dict, NULL, input, 0, k, game); 
+                    rax_insert(dict, input, 0, k, game); 
                 }
 
                 // increment the dictionary size because an element has been inserted in the dictionary

@@ -51,7 +51,7 @@ void rax_dealloc(rax_t* root);
 bool rax_search(const rax_t* root, const char* my_str, size_t curr_idx); 
 
 
-void rax_insert(rax_t*, rax_t*, rax_t*, const char*, size_t, size_t, size_t); 
+void rax_insert(rax_t*, const char*, size_t, size_t, size_t); 
 void rax_print(rax_t*, char*, int, int); 
 int rax_size(rax_t*, int); 
 

@@ -10,8 +10,6 @@ rax_t* rax_alloc_node(size_t k)
 {
     rax_t * new_node = (rax_t *) malloc(sizeof(rax_t) + k+1); 
 
-    fprintf(stderr, "%p\n", new_node); 
-
     // If the allocation is successful, initialize the node's fields
     if (new_node != NULL) {
         new_node->filter = 0; 
@@ -64,7 +62,7 @@ bool rax_search(const rax_t* root, const char* my_str, size_t curr_idx)
 }
 
 
-void rax_insert(rax_t * parent, rax_t * root, rax_t * before, const char* my_str, size_t curr_idx, size_t str_size, size_t game)
+void rax_insert(rax_t * root, const char* my_str, size_t curr_idx, size_t str_size, size_t game)
 {
     size_t piece_idx, new_idx, old_sign;  
     rax_t * new_node, * new_node_son, * old_child, * child_find, * prev, * old_sibling, * new_root;  
@@ -84,42 +82,31 @@ void rax_insert(rax_t * parent, rax_t * root, rax_t * before, const char* my_str
             // allocating the new nodes
             new_node = rax_alloc_node(str_size - piece_idx - curr_idx); 
             new_node_son = rax_alloc_node(piece_size - piece_idx);
-            new_root = rax_alloc_node(piece_idx);  
 
             // copying the correct substrings into the nodes
-            substring_copy(new_root->piece, root->piece, 0, piece_idx); 
             substring_copy(new_node->piece, my_str, piece_idx + curr_idx, str_size); 
             substring_copy(new_node_son->piece, root->piece, piece_idx, piece_size);
+            root->piece[piece_idx] = '\0'; 
 
-            // saving the siblings and children of root 
+            // saving the children of root 
             old_child = root->child; 
-            old_sibling = root->sibling; 
+            root->child = NULL; 
 
-            // setto i filters
+            // set the filters
             new_node->filter = game;
             new_node_son->filter = old_sign;
-            if (game == 0) new_root->filter = 0;   
+            if (game == 0) root->filter = 0;   
 
-            // reimposto i figli e root
-            new_root->child = rax_insert_child(new_root->child, new_node); 
-            new_root->child = rax_insert_child(new_root->child, new_node_son); 
+            // setting the children of root
+            root->child = rax_insert_child(root->child, new_node); 
+            root->child = rax_insert_child(root->child, new_node_son); 
             new_node_son->child = old_child; 
 
-            // rimetto i figli e i fratelli di root in new_root
-            if (before != NULL) {
-                before->sibling = new_root; 
-            } else {
-                parent->child = new_root; 
-            }
-            new_root->sibling = old_sibling; 
-
-            // libero la memoria del vecchio contenuto di root
-            rax_dealloc_node(root); 
             return; 
         }
     }
 
-    new_idx = curr_idx + piece_idx; 
+    new_idx = curr_idx + piece_size; 
 
     // se si entra qui vuol dire che la stringa da inserire è già presente
     if (new_idx == str_size) return; 
@@ -127,17 +114,17 @@ void rax_insert(rax_t * parent, rax_t * root, rax_t * before, const char* my_str
     child_find = rax_search_child(root->child, my_str[new_idx], &prev); 
 
     if (child_find == NULL) {
-        // creo il nuovo e lo riempo con la sua sottostringa
+        // create the new node and fill it with its substring
         new_node = rax_alloc_node(str_size - new_idx); 
         substring_copy(new_node->piece, my_str, new_idx, str_size); 
         new_node->filter = game; 
 
-        // inserisco il nuovo nodo come figlio di root
+        // insert the new node as a child of root
         root->child = rax_insert_child(root->child, new_node); 
         return; 
     }
 
-    rax_insert(root, child_find, prev, my_str, new_idx, str_size, game); 
+    rax_insert(child_find, my_str, new_idx, str_size, game); 
 }
 
 
