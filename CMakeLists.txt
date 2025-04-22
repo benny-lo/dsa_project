@@ -19,6 +19,7 @@ set(SOURCES
     src/utils.c
     src/constants.c
     src/memory_pool.c
+    src/hash_set.c
 )
 
 # Add header files
@@ -27,6 +28,7 @@ set(HEADERS
     src/utils.h
     src/constants.h
     src/memory_pool.h
+    src/hash_set.h
 )
 
 # Create main executable
