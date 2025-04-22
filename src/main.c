@@ -7,11 +7,15 @@
 #include "constants.h"
 #include "rax.h"
 #include "utils.h"
+#include "memory_pool.h"
  
 
 int main(int argc, char * argv[]) {
     // initialize empty dictionary
     rax_t* dict = rax_alloc_node(0); 
+
+    // initialize memory pool
+    memory_pool_t* pool = memory_pool_create(16);
 
     // read the length of the strings
     size_t k;
@@ -27,8 +31,11 @@ int main(int argc, char * argv[]) {
     if (scanf("%s", input) != 1) fprintf(stderr, "error taking input while building dict\n"); 
     while(input[0] != '+') {
         // insert the word into the dictionary and increment the dictionary size
-        rax_insert(dict, input, 0, k, game);
+        rax_insert(dict, input, 0, k, game, pool);
         dict_size++;   
+
+        // printf("dict after %d insertions:\n", dict_size); 
+        // rax_print(dict, input, 0, 1, pool); 
 
         if (scanf("%s", input) != 1) fprintf(stderr, "error taking input while building dict\n"); 
     } 
@@ -62,11 +69,11 @@ int main(int argc, char * argv[]) {
             while(strncmp(input, INSERT_END, strlen(INSERT_END) + 1) != 0) {
                 if (compatible(input, info, k)) {
                     // if the input is compatible with the constraints, it will be part of the filtered dictionary
-                    rax_insert(dict, input, 0, k, 0);
+                    rax_insert(dict, input, 0, k, 0, pool);
                     filtered_size++;  
                 } else {
                     // if the input is not compatible with the constraints, it will not be part of the filtered dictionary
-                    rax_insert(dict, input, 0, k, game); 
+                    rax_insert(dict, input, 0, k, game, pool); 
                 }
 
                 // increment the dictionary size because an element has been inserted in the dictionary
@@ -79,7 +86,7 @@ int main(int argc, char * argv[]) {
             // print_filtered command
 
             // print the strings in the dictionary that are part of the filtered dictionary
-            rax_print(dict, my_str, 0, game); 
+            rax_print(dict, my_str, 0, game, pool); 
         
         } else {
             // processing a guess against the reference word
@@ -91,7 +98,7 @@ int main(int argc, char * argv[]) {
             }
 
             // if the guess is not present in the dictionary, print that it does not exist 
-            if (rax_search(dict, input, 0) == 0) {
+            if (rax_search(dict, input, 0, pool) == 0) {
                 printf("not_exists\n"); 
                 continue; 
             }
@@ -104,7 +111,7 @@ int main(int argc, char * argv[]) {
             printf("%s\n", constraint); 
 
             // update the filtered dictionary and print its size 
-            filtered_size = better_update_filter(dict, str_occur, 0, info, game); 
+            filtered_size = better_update_filter(dict, str_occur, 0, info, game, pool); 
             printf("%d\n", filtered_size); 
 
             // if the maximum number of guesses has been reached, end the game for ko 
@@ -117,7 +124,8 @@ int main(int argc, char * argv[]) {
     } while(scanf("%s", input) != EOF);
 
     // deallocate the radix trie and the info struct
-    rax_dealloc(dict);  
+    rax_dealloc(dict); 
+    memory_pool_destroy(pool); 
     help_dealloc(info); 
 
     return 0; 

@@ -43,11 +43,11 @@ void help_dealloc(help_t*);
 // Returns -1 if character is invalid
 int char_index(char c); 
 
-void reset(char *, int *, int); 
+void reset(const rax_t *, const memory_pool_t*, int *, int); 
 void substring_copy(char *, const char *, size_t, size_t); 
 void gen_constraint(char *, char *, char *, help_t *, int); 
 bool compatible(const char *, const help_t *, size_t);
 
-int better_update_filter(rax_t *, int [], int, help_t *, int); 
+int better_update_filter(rax_t *, int [], int, help_t *, int, const memory_pool_t*); 
 
 #endif 

@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-
+#include "memory_pool.h"
 /* Radix trie node structure.
  * Members:
  * - size_t filter: Filter value for the node
@@ -15,7 +15,8 @@ typedef struct rax_t {
     size_t filter;
     struct rax_t* child;  
     struct rax_t* sibling; 
-    char piece[]; 
+    size_t base;
+    size_t size;
 } rax_t; 
 
 
@@ -24,7 +25,7 @@ typedef struct rax_t {
  * - size_t k: Size of the string piece to store
  * Returns: Pointer to the newly allocated node, or NULL on failure
  */
-rax_t* rax_alloc_node(size_t k); 
+rax_t* rax_alloc_node(); 
 
 
 /* Deallocates a single radix trie node. Ownership of rax_t node deallocated is transferred to the callee.
@@ -48,14 +49,14 @@ void rax_dealloc(rax_t* root);
  * - size_t curr_idx: Current index in the string
  * Returns: true if string is found, false otherwise
  */
-bool rax_search(const rax_t* root, const char* my_str, size_t curr_idx); 
+bool rax_search(const rax_t* root, const char* my_str, size_t curr_idx, const memory_pool_t* pool); 
 
 
-void rax_insert(rax_t*, const char*, size_t, size_t, size_t); 
-void rax_print(rax_t*, char*, int, int); 
+void rax_insert(rax_t*, const char*, size_t, size_t, size_t, memory_pool_t*); 
+void rax_print(rax_t*, char*, int, int, memory_pool_t*); 
 int rax_size(rax_t*, int); 
 
-rax_t* rax_search_child(rax_t*, char, rax_t**); 
-rax_t* rax_insert_child(rax_t*, rax_t*); 
+rax_t* rax_search_child(rax_t*, char, rax_t**, const memory_pool_t*); 
+rax_t* rax_insert_child(rax_t*, rax_t*, const memory_pool_t*); 
 
 #endif 

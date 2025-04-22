@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "utils.h"
+#include "memory_pool.h"
 
 
 help_t* help_alloc(size_t k) 
@@ -65,10 +66,12 @@ int char_index(char c)
 }
 
 
-void reset(char str[], int occur[], int up)
+void reset(const rax_t * node, const memory_pool_t* pool, int occur[], int up)
 {
+    //printf("resetting up %d vs %zu\n", up, node->size); 
     for(int i = 0; i <= up; i++) {
-        if (str[i] != '\0') occur[char_index(str[i])]--; 
+        char c = (i < node->size) ? memory_pool_access(pool, node->base, i) : '\0'; 
+        if (c != '\0') occur[char_index(c)]--; 
     }
 }
 
@@ -149,29 +152,29 @@ bool compatible(const char * my_str, const help_t * info, size_t k)
 }
 
 
-int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info, int game)
+int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info, int game, const memory_pool_t* pool)
 {
     if (root->filter == game) return 0;  
 
     int piece_idx, ans = 0;
 
     rax_t * tmp;  
-    size_t piece_size = strlen(root->piece); 
-    
-    for(piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
+    size_t piece_size = root->size; 
+
+    for(piece_idx = 0; piece_idx != piece_size; piece_idx++) {
         
-        str_occur[char_index(root->piece[piece_idx])]++; 
+        str_occur[char_index(memory_pool_access(pool, root->base, piece_idx))]++; 
 
         if (info->forced[curr_idx + piece_idx] != FOO) {
-            if (info->forced[curr_idx + piece_idx] != root->piece[piece_idx]) {
+            if (info->forced[curr_idx + piece_idx] != memory_pool_access(pool, root->base, piece_idx)) {
                 root->filter = game; 
-                reset(root->piece, str_occur, piece_idx); 
+                reset(root, pool, str_occur, piece_idx); 
                 return 0; 
             }
         } else {
-            if (!info->appear[(curr_idx + piece_idx) * ALPHABET_SIZE + char_index(root->piece[piece_idx])]) {
+            if (!info->appear[(curr_idx + piece_idx) * ALPHABET_SIZE + char_index(memory_pool_access(pool, root->base, piece_idx))]) {
                 root->filter = game; 
-                reset(root->piece, str_occur, piece_idx); 
+                reset(root, pool, str_occur, piece_idx); 
                 return 0; 
             }
         }
@@ -179,7 +182,7 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
         for(int i = 0; i < ALPHABET_SIZE; i++) {
             if (info->option[i] && str_occur[i] > info->occur[i]) {
                 root->filter = game; 
-                reset(root->piece, str_occur, piece_idx);
+                reset(root, pool, str_occur, piece_idx);
                 return 0; 
             }
         }
@@ -191,13 +194,13 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
             if (info->option[i]) {
                 if (str_occur[i] != info->occur[i]) {
                     root->filter = game;
-                    reset(root->piece, str_occur, piece_idx);  
+                    reset(root, pool, str_occur, piece_idx);  
                     return 0; 
                 }
             } else {
                 if (str_occur[i] < info->occur[i]) {
                     root->filter = game; 
-                    reset(root->piece, str_occur, piece_idx); 
+                    reset(root, pool, str_occur, piece_idx); 
                     return 0; 
                 }
             }
@@ -205,17 +208,17 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
             
 
         root->filter = 0;   
-        reset(root->piece, str_occur, piece_idx);  
+        reset(root, pool, str_occur, piece_idx);  
         return 1; 
     } else { 
         while(tmp != NULL) {
-            ans += better_update_filter(tmp, str_occur, curr_idx + piece_idx, info, game); 
+            ans += better_update_filter(tmp, str_occur, curr_idx + piece_idx, info, game, pool); 
             tmp = tmp->sibling; 
         }
 
         if (ans == 0) root->filter = game; 
 
-        reset(root->piece, str_occur, piece_idx); 
+        reset(root, pool, str_occur, piece_idx); 
         return ans; 
     }
 }
