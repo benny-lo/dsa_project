@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "hash_set.h"
+
 /* Radix trie node structure.
  * Members:
  * - size_t filter: Filter value for the node
@@ -12,7 +14,6 @@
  * - char* piece: String piece stored in this node
  */
 typedef struct rax_t {
-    size_t filter;
     struct rax_t* child;  
     struct rax_t* sibling; 
     char piece[]; 
@@ -51,11 +52,18 @@ void rax_dealloc(rax_t* root);
 bool rax_search(const rax_t* root, const char* my_str, size_t curr_idx); 
 
 
-void rax_insert(rax_t*, const char*, size_t, size_t, size_t); 
-void rax_print(rax_t*, char*, int, int); 
-int rax_size(rax_t*, int); 
+void rax_insert(rax_t* root, const char* my_str, size_t curr_idx, size_t str_size, size_t game, hash_set_t* hash_set); 
 
-rax_t* rax_search_child(rax_t*, char, rax_t**); 
-rax_t* rax_insert_child(rax_t*, rax_t*); 
+
+void rax_print(rax_t* root, char* my_str, int curr_idx, int str_size, hash_set_t* hash_set); 
+
+
+int rax_size(rax_t* root, int str_size, hash_set_t* hash_set); 
+
+
+rax_t* rax_search_child(rax_t* root, char c, rax_t** child); 
+
+
+rax_t* rax_insert_child(rax_t* root, rax_t* child); 
 
 #endif 

@@ -13,7 +13,6 @@ rax_t* rax_alloc_node(size_t k)
 
     // If the allocation is successful, initialize the node's fields
     if (new_node != NULL) {
-        new_node->filter = 0; 
         new_node->sibling = NULL; 
         new_node->child = NULL; 
         new_node->piece[k] = '\0'; 
@@ -63,14 +62,19 @@ bool rax_search(const rax_t* root, const char* my_str, size_t curr_idx)
 }
 
 
-void rax_insert(rax_t * root, const char* my_str, size_t curr_idx, size_t str_size, size_t game)
+void rax_insert(rax_t * root, const char* my_str, size_t curr_idx, size_t str_size, size_t game, hash_set_t * hash_set)
 {
     size_t piece_idx, new_idx, old_sign;  
     rax_t * new_node, * new_node_son, * old_child, * child_find, * prev, * old_sibling, * new_root;  
 
-    old_sign = root->filter; 
+
+    bool in_hash_set = hash_set_get(hash_set, (char *) root, &old_sign); 
+    if (!in_hash_set) {
+        old_sign = 0; 
+    }
+    
     if (game == 0) {
-        root->filter = 0; 
+        hash_set_remove(hash_set, (char *) root); 
     }
 
     size_t piece_size = strlen(root->piece); 
@@ -91,9 +95,12 @@ void rax_insert(rax_t * root, const char* my_str, size_t curr_idx, size_t str_si
             root->child = NULL; 
 
             // set the filters
-            new_node->filter = game;
-            new_node_son->filter = old_sign;
-            if (game == 0) root->filter = 0;   
+            if (game != 0) {
+                hash_set_insert(hash_set, (char *) new_node, game); 
+            }
+            if (old_sign == game) {
+                hash_set_insert(hash_set, (char *) new_node_son, old_sign); 
+            }
 
             // setting the children of root
             root->child = rax_insert_child(root->child, new_node); 
@@ -115,20 +122,27 @@ void rax_insert(rax_t * root, const char* my_str, size_t curr_idx, size_t str_si
         // create the new node and fill it with its substring
         new_node = rax_alloc_node(str_size - new_idx); 
         substring_copy(new_node->piece, my_str, new_idx, str_size); 
-        new_node->filter = game; 
+        
+        hash_set_insert(hash_set, (char *) new_node, game); 
 
         // insert the new node as a child of root
         root->child = rax_insert_child(root->child, new_node); 
         return; 
     }
 
-    rax_insert(child_find, my_str, new_idx, str_size, game); 
+    rax_insert(child_find, my_str, new_idx, str_size, game, hash_set); 
 }
 
 
-void rax_print(rax_t * root, char my_str[], int curr_idx, int game)
+void rax_print(rax_t * root, char my_str[], int curr_idx, int game, hash_set_t * hash_set)
 {
-    if (root->filter == game) return; 
+    size_t tmp_game;
+    bool in_hash_set = hash_set_get(hash_set, (char *) root, &tmp_game); 
+    if (!in_hash_set) {
+        tmp_game = 0;
+    }
+
+    if (tmp_game == game) return; 
 
     int piece_idx, new_idx;
     rax_t * tmp;   
@@ -146,15 +160,21 @@ void rax_print(rax_t * root, char my_str[], int curr_idx, int game)
     }
 
     while(tmp != NULL) {
-        rax_print(tmp, my_str, new_idx, game); 
+        rax_print(tmp, my_str, new_idx, game, hash_set); 
         tmp = tmp->sibling; 
     }
 }
 
 
-int rax_size(rax_t * root, int game)
+int rax_size(rax_t * root, int game, hash_set_t * hash_set)
 {
-    if (root->filter == game) return 0; 
+    size_t tmp_game;
+    bool in_hash_set = hash_set_get(hash_set, (char *) root, &tmp_game); 
+    if (!in_hash_set) {
+        tmp_game = 0;
+    }
+
+    if (tmp_game == game) return 0; 
 
     int ans = 0; 
     rax_t * tmp; 
@@ -162,7 +182,7 @@ int rax_size(rax_t * root, int game)
     tmp = root->child; 
     if (tmp == NULL) return 1; 
     while(tmp != NULL) {
-        ans += rax_size(tmp, game); 
+        ans += rax_size(tmp, game, hash_set); 
         tmp = tmp->sibling; 
     }
 

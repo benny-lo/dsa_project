@@ -6,7 +6,7 @@
 
 #include "constants.h"
 #include "rax.h"
-
+#include "hash_set.h"
 /*
  * Actual constraint bookkeeping: 
  * for every position, the character forced in that position ('+');
@@ -48,6 +48,6 @@ void substring_copy(char *, const char *, size_t, size_t);
 void gen_constraint(char *, char *, char *, help_t *, int); 
 bool compatible(const char *, const help_t *, size_t);
 
-int better_update_filter(rax_t *, int [], int, help_t *, int); 
+int better_update_filter(rax_t *, int [], int, help_t *, int, hash_set_t *); 
 
 #endif 

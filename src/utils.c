@@ -3,7 +3,8 @@
 #include <string.h>
 
 #include "utils.h"
-
+#include "hash_set.h"
+#include "rax.h"
 
 help_t* help_alloc(size_t k) 
 {
@@ -149,9 +150,15 @@ bool compatible(const char * my_str, const help_t * info, size_t k)
 }
 
 
-int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info, int game)
+int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info, int game, hash_set_t* hash_set)
 {
-    if (root->filter == game) return 0;  
+    // if (root->filter == game) return 0;  
+    size_t tmp_game;
+    bool in_hash_set = hash_set_get(hash_set, (char *) root, &tmp_game); 
+    if (!in_hash_set) {
+        tmp_game = 0;
+    }
+    if (tmp_game == game) return 0;
 
     int piece_idx, ans = 0;
 
@@ -164,13 +171,15 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
 
         if (info->forced[curr_idx + piece_idx] != FOO) {
             if (info->forced[curr_idx + piece_idx] != root->piece[piece_idx]) {
-                root->filter = game; 
+                // root->filter = game; 
+                hash_set_insert(hash_set, (char *) root, game); 
                 reset(root->piece, str_occur, piece_idx); 
                 return 0; 
             }
         } else {
             if (!info->appear[(curr_idx + piece_idx) * ALPHABET_SIZE + char_index(root->piece[piece_idx])]) {
-                root->filter = game; 
+                // root->filter = game; 
+                hash_set_insert(hash_set, (char *) root, game); 
                 reset(root->piece, str_occur, piece_idx); 
                 return 0; 
             }
@@ -178,7 +187,8 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
 
         for(int i = 0; i < ALPHABET_SIZE; i++) {
             if (info->option[i] && str_occur[i] > info->occur[i]) {
-                root->filter = game; 
+                // root->filter = game; 
+                hash_set_insert(hash_set, (char *) root, game); 
                 reset(root->piece, str_occur, piece_idx);
                 return 0; 
             }
@@ -190,13 +200,15 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
         for(int i = 0; i < ALPHABET_SIZE; i++) {
             if (info->option[i]) {
                 if (str_occur[i] != info->occur[i]) {
-                    root->filter = game;
+                    // root->filter = game; 
+                    hash_set_insert(hash_set, (char *) root, game); 
                     reset(root->piece, str_occur, piece_idx);  
                     return 0; 
                 }
             } else {
                 if (str_occur[i] < info->occur[i]) {
-                    root->filter = game; 
+                    // root->filter = game; 
+                    hash_set_insert(hash_set, (char *) root, game); 
                     reset(root->piece, str_occur, piece_idx); 
                     return 0; 
                 }
@@ -204,16 +216,19 @@ int better_update_filter(rax_t* root, int* str_occur, int curr_idx, help_t* info
         }
             
 
-        root->filter = 0;   
+        // root->filter = 0;   
         reset(root->piece, str_occur, piece_idx);  
         return 1; 
     } else { 
         while(tmp != NULL) {
-            ans += better_update_filter(tmp, str_occur, curr_idx + piece_idx, info, game); 
+            ans += better_update_filter(tmp, str_occur, curr_idx + piece_idx, info, game, hash_set); 
             tmp = tmp->sibling; 
         }
 
-        if (ans == 0) root->filter = game; 
+        if (ans == 0) {
+            // root->filter = game; 
+            hash_set_insert(hash_set, (char *) root, game); 
+        }
 
         reset(root->piece, str_occur, piece_idx); 
         return ans; 

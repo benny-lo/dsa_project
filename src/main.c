@@ -7,15 +7,22 @@
 #include "constants.h"
 #include "rax.h"
 #include "utils.h"
- 
+#include "hash_set.h"
+
 
 int main(int argc, char * argv[]) {
+    //size_t processed_lines = 0;
+
     // initialize empty dictionary
     rax_t* dict = rax_alloc_node(0); 
+
+    hash_set_t* hash_set = hash_set_create(64);
 
     // read the length of the strings
     size_t k;
     if (scanf("%zu", &k) != 1) fprintf(stderr, "error taking k\n");
+    //processed_lines++;
+    //fprintf(stderr, "Processed %zu lines\n", processed_lines);
 
     // initialize the input buffer
     size_t input_size = MAX_KEYWORD; 
@@ -26,8 +33,11 @@ int main(int argc, char * argv[]) {
     int dict_size = 0, game = 0; // we can put the dict size in a management struct for radix trie
     if (scanf("%s", input) != 1) fprintf(stderr, "error taking input while building dict\n"); 
     while(input[0] != '+') {
+        //processed_lines++;
+        //fprintf(stderr, "Processed %zu lines\n", processed_lines);
+
         // insert the word into the dictionary and increment the dictionary size
-        rax_insert(dict, input, 0, k, game);
+        rax_insert(dict, input, 0, k, game, hash_set);
         dict_size++;   
 
         if (scanf("%s", input) != 1) fprintf(stderr, "error taking input while building dict\n"); 
@@ -41,6 +51,9 @@ int main(int argc, char * argv[]) {
     int filtered_size, n;
 
     do {
+        //processed_lines++;
+        //fprintf(stderr, "Processed %zu lines\n", processed_lines);
+
         if (strncmp(input, NEW_GAME, strlen(NEW_GAME) + 1) == 0) {
             // new_game command
 
@@ -54,19 +67,26 @@ int main(int argc, char * argv[]) {
 
             if (scanf("%s", ref) != 1) fprintf(stderr, "error taking ref at beginning of new game\n"); 
             if (scanf("%d", &n) != 1) fprintf(stderr, "error taking n at beginning of new game\n");
-        
+            //processed_lines += 2;
+            //fprintf(stderr, "Processed %zu lines\n", processed_lines);
+
         } else if (strncmp(input, INSERT_START, strlen(INSERT_START) + 1) == 0) {
             // insert_start command
 
             if (scanf("%s", input) == 0) fprintf(stderr, "error taking input during insertion\n"); 
+            
+
             while(strncmp(input, INSERT_END, strlen(INSERT_END) + 1) != 0) {
+                //processed_lines++;
+                //fprintf(stderr, "Processed %zu lines\n", processed_lines);
+
                 if (compatible(input, info, k)) {
                     // if the input is compatible with the constraints, it will be part of the filtered dictionary
-                    rax_insert(dict, input, 0, k, 0);
+                    rax_insert(dict, input, 0, k, 0, hash_set);
                     filtered_size++;  
                 } else {
                     // if the input is not compatible with the constraints, it will not be part of the filtered dictionary
-                    rax_insert(dict, input, 0, k, game); 
+                    rax_insert(dict, input, 0, k, game, hash_set); 
                 }
 
                 // increment the dictionary size because an element has been inserted in the dictionary
@@ -74,12 +94,14 @@ int main(int argc, char * argv[]) {
  
                 if (scanf("%s", input) != 1) fprintf(stderr, "error taking input during insertion\n"); 
             }
+            //processed_lines++;
+            //fprintf(stderr, "Processed %zu lines\n", processed_lines);
         
         } else if (strncmp(input, PRINT_FILTERED, strlen(PRINT_FILTERED) + 1) == 0) {
             // print_filtered command
 
             // print the strings in the dictionary that are part of the filtered dictionary
-            rax_print(dict, my_str, 0, game); 
+            rax_print(dict, my_str, 0, game, hash_set); 
         
         } else {
             // processing a guess against the reference word
@@ -104,7 +126,7 @@ int main(int argc, char * argv[]) {
             printf("%s\n", constraint); 
 
             // update the filtered dictionary and print its size 
-            filtered_size = better_update_filter(dict, str_occur, 0, info, game); 
+            filtered_size = better_update_filter(dict, str_occur, 0, info, game, hash_set); 
             printf("%d\n", filtered_size); 
 
             // if the maximum number of guesses has been reached, end the game for ko 
@@ -117,6 +139,7 @@ int main(int argc, char * argv[]) {
     } while(scanf("%s", input) != EOF);
 
     // deallocate the radix trie and the info struct
+    hash_set_destroy(hash_set);
     rax_dealloc(dict);  
     help_dealloc(info); 
 
