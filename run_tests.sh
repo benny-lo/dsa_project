@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EXECUTABLE="$1"
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -18,7 +20,7 @@ run_test() {
     echo "Running test: $test_name"
 
     # Run the program and measure time + memory
-    /usr/bin/time -f "%e %M" ./build/bin/dsa_project < "$input_file" > output.txt 2> stats.txt
+    /usr/bin/time -f "%e %M" ./build/bin/dsa_project_$EXECUTABLE < "$input_file" > output.txt 2> stats.txt
     read elapsed_s mem_kb < stats.txt
 
     # Compare output

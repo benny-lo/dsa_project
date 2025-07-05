@@ -6,12 +6,6 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)  # Use strict C11
 
-# Add compiler flags for VLA support and sanitizers
-if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-std=c11 -g -O0 -fsanitize=address -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
-endif()
-
 # Add source files
 set(SOURCES
     src/main.c
@@ -29,11 +23,13 @@ set(HEADERS
     src/memory_pool.h
 )
 
-# Create main executable
-add_executable(dsa_project ${SOURCES} ${HEADERS})
+add_executable(dsa_project_debug ${SOURCES} ${HEADERS})
+add_compile_options(-std=c11 -Wall -g -O0 -fsanitize=address -fno-omit-frame-pointer)
+add_link_options(-fsanitize=address)
+target_include_directories(dsa_project_debug PRIVATE src)
 
-# Include directories
-target_include_directories(dsa_project PRIVATE src)
+add_executable(dsa_project_release ${SOURCES} ${HEADERS})
+add_compile_options(-std=c11 -O3)
 
 # Set output directory
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin) 

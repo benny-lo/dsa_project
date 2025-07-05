@@ -68,8 +68,7 @@ bool rax_search(const rax_t *root, const char *str, size_t curr_idx) {
 void rax_insert(rax_t *root, const char *str, size_t curr_idx,
                 size_t str_size, size_t game) {
   size_t piece_idx, new_idx, old_sign;
-  rax_t *new_node, *new_node_son, *old_child, *child_find, *prev, *old_sibling,
-      *new_root;
+  rax_t *new_node, *new_node_son, *old_child, *child_find, *prev;
 
   old_sign = root->filter;
   if (game == 0) {

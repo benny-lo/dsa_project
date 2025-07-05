@@ -1,8 +1,48 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "utils.h"
+#include "constants.h"
+
+static size_t char_index(char c);
+static void reset(char *, int *, size_t); 
+
+static size_t char_index(char c) {
+  int char_index;
+
+  if (c == '-') {
+    char_index = 0;
+  } else if (c - '0' >= 0 && c - '0' < 10) {
+    char_index = c - '0' + 1;
+  } else if (c - 'A' >= 0 && c - 'A' < 26) {
+    char_index = c - 'A' + 11;
+  } else if (c == '_') {
+    char_index = 37;
+  } else if (c - 'a' >= 0 && c - 'a' < 26) {
+    char_index = c - 'a' + 38;
+  } else {
+    char_index = ALPHABET_SIZE;
+    fprintf(stderr, "error: failed conversion of %c\n", c);
+  }
+
+  return char_index;
+}
+
+static void reset(char * str, int * occur, size_t up) {
+  for (int i = 0; i <= up; i++) {
+    if (str[i] != '\0')
+      occur[char_index(str[i])]--;
+  }
+}
+
+void substring_copy(char *dest, const char *source, size_t a, size_t b) {
+  for (int i = 0; i < b - a; i++) {
+    dest[i] = source[a + i];
+  }
+  dest[b - a] = '\0';
+}
 
 help_t *help_alloc(size_t k) {
   help_t *info = (help_t *)malloc(sizeof(help_t));
@@ -18,7 +58,7 @@ void help_reset(help_t *info, size_t k) {
     info->occur[i] = 0;
   }
 
-  for (int i = 0; i < k; i++) {
+  for (size_t i = 0; i < k; i++) {
     info->forced[i] = FOO;
     for (int j = 0; j < ALPHABET_SIZE; j++) {
       info->appear[i * ALPHABET_SIZE + j] = true;
@@ -38,46 +78,10 @@ void help_dealloc(help_t *info) {
   free(info);
 }
 
-int char_index(char c) {
-  int char_index;
-
-  if (c == '-') {
-    char_index = 0;
-  } else if (c - '0' >= 0 && c - '0' < 10) {
-    char_index = c - '0' + 1;
-  } else if (c - 'A' >= 0 && c - 'A' < 26) {
-    char_index = c - 'A' + 11;
-  } else if (c == '_') {
-    char_index = 37;
-  } else if (c - 'a' >= 0 && c - 'a' < 26) {
-    char_index = c - 'a' + 38;
-  } else {
-    char_index = -1;
-    fprintf(stderr, "error: failed conversion of %c\n", c);
-  }
-
-  return char_index;
-}
-
-void reset(char str[], int occur[], int up) {
-  for (int i = 0; i <= up; i++) {
-    if (str[i] != '\0')
-      occur[char_index(str[i])]--;
-  }
-}
-
-void substring_copy(char *dest, const char *source, size_t a, size_t b) {
-  for (int i = 0; i < b - a; i++) {
-    dest[i] = source[a + i];
-  }
-  dest[b - a] = '\0';
-}
-
-void gen_constraint(char ref[], char guess[], char constraint[], help_t *info,
-                    int k) {
+void gen_constraint(const char * ref, const char * guess, char * constraint, help_t *info, size_t k) {
   int ref_occur[ALPHABET_SIZE] = {0}, guess_occur_notslash[ALPHABET_SIZE] = {0};
 
-  for (int i = 0; i < k; i++) {
+  for (size_t i = 0; i < k; i++) {
     constraint[i] = FOO;
     ref_occur[char_index(ref[i])]++;
 
@@ -91,7 +95,7 @@ void gen_constraint(char ref[], char guess[], char constraint[], help_t *info,
     }
   }
 
-  for (int i = 0; i < k; i++) {
+  for (size_t i = 0; i < k; i++) {
     if (constraint[i] != '+') {
       if (ref_occur[char_index(guess[i])] != 0) {
         constraint[i] = '|';
@@ -117,21 +121,21 @@ void gen_constraint(char ref[], char guess[], char constraint[], help_t *info,
   constraint[k] = '\0';
 }
 
-bool compatible(const char *my_str, const help_t *info, size_t k) {
+bool compatible(const char *str, const help_t *info, size_t k) {
   size_t str_occur[ALPHABET_SIZE] = {0};
 
   for (size_t i = 0; i < k; i++) {
-    str_occur[char_index(my_str[i])]++;
+    str_occur[char_index(str[i])]++;
     if (info->forced[i] != FOO) {
-      if (info->forced[i] != my_str[i])
+      if (info->forced[i] != str[i])
         return false;
     } else {
-      if (!info->appear[i * ALPHABET_SIZE + char_index(my_str[i])])
+      if (!info->appear[i * ALPHABET_SIZE + char_index(str[i])])
         return false;
     }
   }
 
-  for (int i = 0; i < ALPHABET_SIZE; i++) {
+  for (size_t i = 0; i < ALPHABET_SIZE; i++) {
     if (info->option[i]) {
       if (info->occur[i] != str_occur[i])
         return false;
@@ -144,12 +148,11 @@ bool compatible(const char *my_str, const help_t *info, size_t k) {
   return true;
 }
 
-int better_update_filter(rax_t *root, int *str_occur, int curr_idx,
-                         help_t *info, int game) {
+size_t better_update_filter(rax_t *root, int *str_occur, int curr_idx, help_t *info, int game) {
   if (root->filter == game)
     return 0;
 
-  int piece_idx, ans = 0;
+  size_t piece_idx, ans = 0;
 
   rax_t *tmp;
   size_t piece_size = strlen(root->piece);
@@ -173,7 +176,7 @@ int better_update_filter(rax_t *root, int *str_occur, int curr_idx,
       }
     }
 
-    for (int i = 0; i < ALPHABET_SIZE; i++) {
+    for (size_t i = 0; i < ALPHABET_SIZE; i++) {
       if (info->option[i] && str_occur[i] > info->occur[i]) {
         root->filter = game;
         reset(root->piece, str_occur, piece_idx);
@@ -184,7 +187,7 @@ int better_update_filter(rax_t *root, int *str_occur, int curr_idx,
 
   tmp = root->child;
   if (tmp == NULL) {
-    for (int i = 0; i < ALPHABET_SIZE; i++) {
+    for (size_t i = 0; i < ALPHABET_SIZE; i++) {
       if (info->option[i]) {
         if (str_occur[i] != info->occur[i]) {
           root->filter = game;

@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
       printf("%s\n", constraint);
 
       // update the filtered dictionary and print its size
-      filtered_size = better_update_filter(dict, str_occur, 0, info, game);
+      filtered_size = update_filter(dict, str_occur, 0, info, game);
       printf("%d\n", filtered_size);
 
       // if the maximum number of guesses has been reached, end the game for ko
