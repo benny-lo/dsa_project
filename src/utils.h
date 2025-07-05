@@ -28,7 +28,7 @@
  * appear:  Matrix storing allowed characters at each position
  */
 typedef struct help_t {
-    size_t occur[ALPHABET_SIZE]; 
+    int occur[ALPHABET_SIZE]; 
     bool option[ALPHABET_SIZE]; 
     char* forced; 
     bool* appear; 

@@ -148,15 +148,13 @@ bool compatible(const char *str, const help_t *info, size_t k) {
   return true;
 }
 
-size_t better_update_filter(rax_t *root, int *str_occur, int curr_idx, help_t *info, int game) {
+size_t update_filter(rax_t *root, int *str_occur, size_t curr_idx, help_t *info, size_t game) {
   if (root->filter == game)
     return 0;
 
   size_t piece_idx, ans = 0;
-
   rax_t *tmp;
-  size_t piece_size = strlen(root->piece);
-
+  
   for (piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
 
     str_occur[char_index(root->piece[piece_idx])]++;
@@ -208,7 +206,7 @@ size_t better_update_filter(rax_t *root, int *str_occur, int curr_idx, help_t *i
     return 1;
   } else {
     while (tmp != NULL) {
-      ans += better_update_filter(tmp, str_occur, curr_idx + piece_idx, info,
+      ans += update_filter(tmp, str_occur, curr_idx + piece_idx, info,
                                   game);
       tmp = tmp->sibling;
     }
