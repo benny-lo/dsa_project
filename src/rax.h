@@ -44,18 +44,37 @@ void rax_dealloc(rax_t* root);
 /* Searches for a string in the radix trie.
  * Parameters:
  * - rax_t* root: Root node of the trie
- * - char* my_str: String to search for
+ * - char* str: String to search for
  * - size_t curr_idx: Current index in the string
  * Returns: true if string is found, false otherwise
  */
-bool rax_search(const rax_t* root, const char* my_str, size_t curr_idx); 
+bool rax_search(const rax_t* root, const char* str, size_t curr_idx); 
 
+/* Inserts a string in the radix trie. 
+ * Parameters:
+ * - rax_t* root: Root node of the trie
+ * - const char* str: String to insert
+ * - size_t new_idx: Current index in the string
+ * - size_t str_size: Size of the string to insert
+ * - size_t game: Game index for filtering
+ */
+void rax_insert(rax_t*, const char* str, size_t curr_idx, size_t str_size, size_t game); 
 
-void rax_insert(rax_t*, const char*, size_t, size_t, size_t); 
-void rax_print(rax_t*, char*, int, int); 
-int rax_size(rax_t*, int); 
+/* Prints the strings stored in the radix trie.
+ * Parameters:
+ * - rax_t* root: Root node of the trie
+ * - char* str: Buffer to store the printed strings (must be large enough)
+ * - size_t curr_idx: Current index in the string buffer
+ * - size_t game: Game index for filtering
+ */
+void rax_print(rax_t* root, char* str, size_t curr_idx, size_t game); 
 
-rax_t* rax_search_child(rax_t*, char, rax_t**); 
-rax_t* rax_insert_child(rax_t*, rax_t*); 
+/* Returns the number of strings stored in the radix trie.
+ * Parameters:
+ * - rax_t* root: Root node of the trie
+ * - size_t game: Game index for filtering
+ * Returns: Number of strings in the trie
+ */
+size_t rax_size(rax_t* root, size_t game); 
 
 #endif 

@@ -6,6 +6,9 @@
 #include "rax.h"
 #include "utils.h"
 
+static rax_t* rax_search_child(rax_t *child, char to_find, rax_t **prev); 
+static rax_t* rax_insert_child(rax_t *child, rax_t *to_ins); 
+
 rax_t *rax_alloc_node(size_t k) {
   rax_t *new_node = (rax_t *)malloc(sizeof(rax_t) + k + 1);
 
@@ -38,31 +41,31 @@ void rax_dealloc(rax_t *root) {
   rax_dealloc_node(root);
 }
 
-bool rax_search(const rax_t *root, const char *my_str, size_t curr_idx) {
+bool rax_search(const rax_t *root, const char *str, size_t curr_idx) {
   size_t piece_idx, new_idx;
   rax_t *good_child;
 
   // If the string does not partially match the piece of the current node,
   // return false
   for (piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
-    if (root->piece[piece_idx] != my_str[curr_idx + piece_idx])
+    if (root->piece[piece_idx] != str[curr_idx + piece_idx])
       return false;
   }
 
   // If the string is fully matched, return true
   new_idx = curr_idx + piece_idx;
-  if (my_str[new_idx] == '\0')
+  if (str[new_idx] == '\0')
     return true;
 
   // The string is only partially matched, so we need to search for the next
   // node to continue with in the linked list of children.
-  good_child = rax_search_child(root->child, my_str[new_idx], NULL);
+  good_child = rax_search_child(root->child, str[new_idx], NULL);
   if (good_child == NULL)
     return false;
-  return rax_search(good_child, my_str, new_idx);
+  return rax_search(good_child, str, new_idx);
 }
 
-void rax_insert(rax_t *root, const char *my_str, size_t curr_idx,
+void rax_insert(rax_t *root, const char *str, size_t curr_idx,
                 size_t str_size, size_t game) {
   size_t piece_idx, new_idx, old_sign;
   rax_t *new_node, *new_node_son, *old_child, *child_find, *prev, *old_sibling,
@@ -76,13 +79,13 @@ void rax_insert(rax_t *root, const char *my_str, size_t curr_idx,
   size_t piece_size = strlen(root->piece);
 
   for (piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
-    if (root->piece[piece_idx] != my_str[curr_idx + piece_idx]) {
+    if (root->piece[piece_idx] != str[curr_idx + piece_idx]) {
       // allocating the new nodes
       new_node = rax_alloc_node(str_size - piece_idx - curr_idx);
       new_node_son = rax_alloc_node(piece_size - piece_idx);
 
       // copying the correct substrings into the nodes
-      substring_copy(new_node->piece, my_str, piece_idx + curr_idx, str_size);
+      substring_copy(new_node->piece, str, piece_idx + curr_idx, str_size);
       substring_copy(new_node_son->piece, root->piece, piece_idx, piece_size);
       root->piece[piece_idx] = '\0';
 
@@ -111,12 +114,12 @@ void rax_insert(rax_t *root, const char *my_str, size_t curr_idx,
   if (new_idx == str_size)
     return;
 
-  child_find = rax_search_child(root->child, my_str[new_idx], &prev);
+  child_find = rax_search_child(root->child, str[new_idx], &prev);
 
   if (child_find == NULL) {
     // create the new node and fill it with its substring
     new_node = rax_alloc_node(str_size - new_idx);
-    substring_copy(new_node->piece, my_str, new_idx, str_size);
+    substring_copy(new_node->piece, str, new_idx, str_size);
     new_node->filter = game;
 
     // insert the new node as a child of root
@@ -124,39 +127,39 @@ void rax_insert(rax_t *root, const char *my_str, size_t curr_idx,
     return;
   }
 
-  rax_insert(child_find, my_str, new_idx, str_size, game);
+  rax_insert(child_find, str, new_idx, str_size, game);
 }
 
-void rax_print(rax_t *root, char my_str[], int curr_idx, int game) {
+void rax_print(rax_t *root, char *str, size_t curr_idx, size_t game) {
   if (root->filter == game)
     return;
 
-  int piece_idx, new_idx;
+  size_t piece_idx, new_idx;
   rax_t *tmp;
   for (piece_idx = 0; root->piece[piece_idx] != '\0'; piece_idx++) {
-    my_str[curr_idx + piece_idx] = root->piece[piece_idx];
+    str[curr_idx + piece_idx] = root->piece[piece_idx];
   }
 
   new_idx = piece_idx + curr_idx;
   tmp = root->child;
 
   if (tmp == NULL) {
-    my_str[new_idx] = '\0';
-    printf("%s\n", my_str);
+    str[new_idx] = '\0';
+    printf("%s\n", str);
     return;
   }
 
   while (tmp != NULL) {
-    rax_print(tmp, my_str, new_idx, game);
+    rax_print(tmp, str, new_idx, game);
     tmp = tmp->sibling;
   }
 }
 
-int rax_size(rax_t *root, int game) {
+size_t rax_size(rax_t *root, size_t game) {
   if (root->filter == game)
     return 0;
 
-  int ans = 0;
+  size_t ans = 0;
   rax_t *tmp;
 
   tmp = root->child;
@@ -170,7 +173,7 @@ int rax_size(rax_t *root, int game) {
   return ans;
 }
 
-rax_t *rax_search_child(rax_t *child, char to_find, rax_t **prev) {
+static rax_t *rax_search_child(rax_t *child, char to_find, rax_t **prev) {
   if (prev != NULL)
     *prev = NULL;
   while (child != NULL) {
@@ -184,7 +187,7 @@ rax_t *rax_search_child(rax_t *child, char to_find, rax_t **prev) {
   return NULL;
 }
 
-rax_t *rax_insert_child(rax_t *child, rax_t *to_ins) {
+static rax_t *rax_insert_child(rax_t *child, rax_t *to_ins) {
   if (child == NULL)
     return to_ins;
   char new_val = to_ins->piece[0];
